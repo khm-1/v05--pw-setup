@@ -33,10 +33,35 @@ check_requirements() {
         log_warning "This script is optimized for Ubuntu. Other distributions may work but are not tested."
     fi
     
+    # Check Ubuntu version and warn about potential issues
+    if [[ -n "$VERSION_ID" ]]; then
+        local version_major=$(echo "$VERSION_ID" | cut -d. -f1)
+        log_info "Detected Ubuntu $VERSION_ID"
+        
+        if [[ "$version_major" -ge 22 ]]; then
+            log_info "Modern Ubuntu detected - using updated package management"
+        elif [[ "$version_major" -ge 20 ]]; then
+            log_info "Ubuntu 20.04+ detected - compatible"
+        else
+            log_warning "Older Ubuntu version detected. Some features may not work as expected."
+        fi
+    fi
+    
     # Check internet connection
     if ! ping -c 1 google.com &> /dev/null; then
         log_error "Internet connection required for installation"
         exit 1
+    fi
+    
+    # Check if running as root (not recommended)
+    if [[ $EUID -eq 0 ]]; then
+        log_warning "Running as root is not recommended. Consider using a regular user with sudo access."
+    fi
+    
+    # Check available disk space (need at least 2GB)
+    local available_space=$(df . | awk 'NR==2 {print int($4/1024/1024)}')
+    if [[ $available_space -lt 2 ]]; then
+        log_warning "Low disk space detected (${available_space}GB available). At least 2GB recommended."
     fi
     
     log_success "System requirements check passed"
@@ -93,20 +118,80 @@ install_chrome() {
     
     log_info "Installing Google Chrome..."
     
-    # Add Google Chrome repository
-    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+    # Try modern approach first (for Ubuntu 22.04+)
+    if install_chrome_modern; then
+        return 0
+    fi
+    
+    # Fallback to direct .deb download if repository method fails
+    log_warning "Repository method failed, trying direct download..."
+    install_chrome_direct
+}
+
+# Modern Chrome installation (Ubuntu 22.04+)
+install_chrome_modern() {
+    log_info "Using modern repository method..."
+    
+    # Download and install the signing key
+    if ! wget -q -O /tmp/google-chrome-key.pub https://dl.google.com/linux/linux_signing_key.pub; then
+        log_error "Failed to download Chrome signing key"
+        return 1
+    fi
+    
+    # Add the key to the trusted keyring
+    if ! sudo gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg /tmp/google-chrome-key.pub 2>/dev/null; then
+        log_error "Failed to add Chrome signing key"
+        rm -f /tmp/google-chrome-key.pub
+        return 1
+    fi
+    
+    # Add the repository with the keyring reference
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list > /dev/null
+    
+    # Clean up temporary key file
+    rm -f /tmp/google-chrome-key.pub
     
     # Update and install Chrome
-    sudo apt update
-    sudo apt install -y google-chrome-stable
+    if sudo apt update && sudo apt install -y google-chrome-stable; then
+        log_success "Google Chrome installed successfully via repository"
+        return 0
+    else
+        log_error "Repository installation failed"
+        return 1
+    fi
+}
+
+# Direct Chrome installation (fallback method)
+install_chrome_direct() {
+    log_info "Using direct download method..."
+    
+    # Download Chrome .deb package directly
+    local chrome_deb="/tmp/google-chrome-stable.deb"
+    
+    if ! wget -q -O "$chrome_deb" https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb; then
+        log_error "Failed to download Chrome package"
+        return 1
+    fi
+    
+    # Install the package
+    if sudo dpkg -i "$chrome_deb" 2>/dev/null; then
+        log_success "Chrome package installed"
+    else
+        log_warning "Chrome package installation had dependency issues, fixing..."
+        # Fix dependencies
+        sudo apt-get install -f -y
+    fi
+    
+    # Clean up
+    rm -f "$chrome_deb"
     
     # Verify installation
     if command_exists google-chrome-stable; then
-        log_success "Google Chrome installed successfully"
+        log_success "Google Chrome installed successfully via direct download"
+        return 0
     else
-        log_error "Google Chrome installation failed"
-        exit 1
+        log_error "Chrome installation failed"
+        return 1
     fi
 }
 
@@ -264,6 +349,15 @@ handle_arguments() {
             echo "  --configure          Run configuration wizard"
             echo "  --repair             Repair installation"
             echo "  --check              Check installation status"
+            echo "  --fix-chrome         Fix Chrome installation issues"
+            echo "  --clean              Clean up temporary files and caches"
+            echo ""
+            echo "Troubleshooting:"
+            echo "  If you encounter 'apt-key: command not found':"
+            echo "    ./setup.sh --fix-chrome"
+            echo ""
+            echo "  If installation fails:"
+            echo "    ./setup.sh --clean && ./setup.sh --repair"
             echo ""
             exit 0
             ;;
@@ -283,6 +377,28 @@ handle_arguments() {
         --check)
             validate_installation
             exit $?
+            ;;
+        --fix-chrome)
+            log_info "Fixing Chrome installation..."
+            # Remove any problematic Chrome repository files
+            sudo rm -f /etc/apt/sources.list.d/google-chrome.list
+            sudo rm -f /usr/share/keyrings/google-chrome-keyring.gpg
+            # Try to install Chrome again
+            install_chrome
+            exit $?
+            ;;
+        --clean)
+            log_info "Cleaning up temporary files and caches..."
+            # Clean up temporary files
+            rm -f /tmp/google-chrome-*.deb /tmp/google-chrome-key.pub
+            # Clean npm cache if it exists
+            if command_exists npm; then
+                npm cache clean --force 2>/dev/null || true
+            fi
+            # Clean apt cache
+            sudo apt clean
+            log_success "Cleanup completed"
+            exit 0
             ;;
         "")
             # Default setup
