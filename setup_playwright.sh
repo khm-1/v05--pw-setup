@@ -6,14 +6,21 @@ set -e
 # Update package list and install necessary dependencies
 echo "Updating package list and installing dependencies..."
 sudo apt update
-sudo apt install -y curl gnupg
+sudo apt install -y curl gnupg wget software-properties-common apt-transport-https ca-certificates
 
 # Install Node.js and npm
 echo "Installing Node.js and npm..."
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 sudo apt install -y nodejs
 
-# Install Playwright and its browsers (including Chromium)
+# Install Google Chrome (stable version)
+echo "Installing Google Chrome..."
+wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+sudo apt update
+sudo apt install -y google-chrome-stable
+
+# Install Playwright and its browsers (including Chromium as fallback)
 echo "Installing Playwright and browsers..."
 npm init -y
 npm install playwright
@@ -23,28 +30,18 @@ npx playwright install chromium
 echo "Installing Xvfb and other display utilities..."
 sudo apt install -y xvfb x11-utils
 
-# Create a virtual display with 1920x1024 resolution
-echo "Starting Xvfb virtual display..."
-Xvfb :99 -screen 0 1920x1024x24 -ac +extension GLX +render -noreset &
-export DISPLAY=:99
-
-# Start Chrome in headless mode with remote debugging enabled
-echo "Starting Chrome in headless mode with remote debugging..."
-# Ensure the Playwright-installed Chromium is used
-CHROMIUM_PATH="/home/ubuntu/.cache/ms-playwright/chromium-1179/chrome-linux/chrome"
-
-# Check if Chromium path is found
-if [ -z "$CHROMIUM_PATH" ]; then
-    echo "Error: Playwright Chromium executable not found."
-    exit 1
+# Install Deno if not already present
+echo "Installing Deno..."
+if ! command -v deno &> /dev/null; then
+    curl -fsSL https://deno.land/install.sh | sh -s -- -y
+    export PATH="$HOME/.deno/bin:$PATH"
+    echo 'export PATH="$HOME/.deno/bin:$PATH"' >> ~/.bashrc
+    echo "Deno installed successfully"
+else
+    echo "Deno is already installed"
 fi
 
-# Start Chrome with remote debugging on port 9222
-# Use --disable-gpu and --no-sandbox for server environments
-# --remote-debugging-address=0.0.0.0 allows external connections
-"$CHROMIUM_PATH" --headless=new --remote-debugging-port=9222 --remote-debugging-address=0.0.0.0 --disable-gpu --no-sandbox --window-size=1920,1024 &> chrome_output.log &
-
-echo "Playwright, Chrome, and Xvfb setup complete. Chrome is running with remote debugging on port 9222."
-echo "You can check chrome_output.log for Chrome's output."
+echo "Setup complete! Use './run_chrome_remote.sh' to start Chrome with remote debugging."
+echo "Then run 'deno run --allow-net --allow-read --allow-write --allow-env deno_script.ts' to interact with Chrome."
 
 
