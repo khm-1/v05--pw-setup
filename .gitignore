@@ -1,0 +1,85 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Deno cache and lock files
+deno.lock
+.deno/
+
+# Chrome user data and profiles
+/tmp/chrome-*-profile/
+chrome-*-profile/
+**/chrome-profile/
+**/chrome-*-test/
+
+# Log files
+*.log
+chrome_output.log
+chrome_remote.log
+chrome_lowcpu.log
+*_baseline.log
+*_monitor.log
+*_results.txt
+*_run*.log
+*_test.log
+
+# Process ID files
+*.pid
+chrome_remote.pid
+chrome_lowcpu.pid
+
+# Screenshots and test outputs
+screenshot.png
+*_screenshot.png
+page_info.log
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backup files
+*.backup
+*.bak
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# X11 lock files
+/tmp/.X*-lock
+
+# Chrome debugging files
+DevToolsActivePort
+
+# User data directories (configurable)
+/var/lib/chrome-automation/
+/secure/chrome-profile/
+/isolated/chrome-profile/

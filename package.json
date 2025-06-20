@@ -1,0 +1,23 @@
+{
+  "name": "v05--pw-setup",
+  "version": "1.0.0",
+  "description": "This project provides a robust solution for running Playwright with Google Chrome in a headless environment on an Ubuntu Minimal 24 server. It includes a shell script for automated setup and a Deno script for interacting with the browser, enabling tasks like web scraping, automated testing, and content generation.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/khm-1/v05--pw-setup.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/khm-1/v05--pw-setup/issues"
+  },
+  "homepage": "https://github.com/khm-1/v05--pw-setup#readme",
+  "dependencies": {
+    "playwright": "^1.53.1"
+  }
+}

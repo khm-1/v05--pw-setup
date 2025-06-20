@@ -1,0 +1,38 @@
+# Custom Configuration Template
+# Copy this file to custom.conf and modify as needed
+
+DISPLAY_SIZE="1280x720x16"
+CHROME_PORT="9222"
+CHROME_ADDRESS="0.0.0.0"
+USER_DATA_DIR="/tmp/chrome-custom-profile"
+WINDOW_SIZE="1280,720"
+CHROME_FLAGS="--disable-extensions --disable-plugins"
+
+# Configuration metadata
+CONFIG_NAME="Custom"
+CONFIG_DESCRIPTION="User-defined custom configuration"
+CPU_USAGE="Variable"
+MEMORY_USAGE="Variable"
+QUALITY="Variable"
+
+# Available DISPLAY_SIZE formats:
+# - 1920x1080x24 (High quality, high CPU)
+# - 1280x720x16  (Balanced quality and performance)
+# - 800x600x16   (Low resource usage)
+# - 375x667x16   (Mobile simulation)
+
+# Available CHROME_ADDRESS options:
+# - 0.0.0.0      (Allow external connections)
+# - 127.0.0.1    (Local connections only)
+# - specific IP  (Bind to specific interface)
+
+# Common CHROME_FLAGS:
+# Performance:
+# --disable-extensions --disable-plugins --max_old_space_size=512
+# --disable-background-networking --disable-images
+#
+# Security:
+# --no-sandbox --disable-dev-shm-usage --incognito
+#
+# Development:
+# --disable-web-security --allow-running-insecure-content
