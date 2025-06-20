@@ -5,6 +5,8 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
+q/
+
 # Deno cache and lock files
 deno.lock
 .deno/
