@@ -5,8 +5,6 @@ yarn-debug.log*
 yarn-error.log*
 package-lock.json
 
-q/
-
 # Deno cache and lock files
 deno.lock
 .deno/
@@ -16,12 +14,14 @@ deno.lock
 chrome-*-profile/
 **/chrome-profile/
 **/chrome-*-test/
+/tmp/chrome-external-test/
 
 # Log files
 *.log
 chrome_output.log
 chrome_remote.log
 chrome_lowcpu.log
+chrome-*.log
 *_baseline.log
 *_monitor.log
 *_results.txt
@@ -32,10 +32,14 @@ chrome_lowcpu.log
 *.pid
 chrome_remote.pid
 chrome_lowcpu.pid
+chrome-*.pid
+socat-chrome.pid
+chrome-external.pid
 
 # Screenshots and test outputs
 screenshot.png
 *_screenshot.png
+external_screenshot.png
 page_info.log
 
 # Temporary files
@@ -85,3 +89,8 @@ DevToolsActivePort
 /var/lib/chrome-automation/
 /secure/chrome-profile/
 /isolated/chrome-profile/
+
+# External access fix files (temporary)
+fix_*.sh
+start_chrome_external*.sh
+lib/chrome_manager_fixed.sh
